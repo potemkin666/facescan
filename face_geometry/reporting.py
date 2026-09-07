@@ -322,28 +322,34 @@ def write_report_html(
     <h2>Aligned landmark overlays</h2>
     <div class="overlays">{figures}</div>"""
 
+    # "Moonlit Shore" palette: deep indigo/violet night sky, warm moonglow
+    # text and a cool moonlit-water accent, matching the desktop GUI theme.
     css = """
-    body{font-family:system-ui,Arial,sans-serif;margin:2rem auto;max-width:1000px;
-         color:#1c1e21;background:#f7f8fa;line-height:1.45}
-    h1{background:#0b3050;color:#fff;padding:1rem 1.4rem;border-radius:8px;
-       letter-spacing:.05em}
-    h2{border-bottom:2px solid #0b3050;padding-bottom:.2rem;margin-top:2.2rem}
+    body{font-family:Georgia,'Times New Roman',serif;margin:0 auto;max-width:1000px;
+         padding:2rem 1.5rem 3rem;color:#e7e2f5;background:#181233;line-height:1.5}
+    h1{background:linear-gradient(135deg,#241a4d,#392e63);color:#f6efd9;
+       padding:1.1rem 1.5rem;border-radius:10px;letter-spacing:.08em;
+       border:1px solid #8b7fd1}
+    h2{border-bottom:2px solid #8b7fd1;color:#f6efd9;padding-bottom:.3rem;
+       margin-top:2.2rem;letter-spacing:.02em}
+    a{color:#cfe3f7}
+    code{background:#241a4d;color:#cfe3f7;padding:.1rem .3rem;border-radius:4px}
     .cards{display:flex;flex-wrap:wrap;gap:1rem;margin:1rem 0}
-    .card{background:#fff;border:1px solid #d7dce2;border-radius:8px;
+    .card{background:#241a4d;border:1px solid #392e63;border-radius:10px;
           padding:.8rem 1.1rem;min-width:170px;flex:1}
-    .card .value{font-size:1.5rem;font-weight:700;color:#0b3050}
-    .card .label{font-size:.82rem;color:#5a636e;text-transform:uppercase}
-    table{border-collapse:collapse;width:100%;margin:.8rem 0;background:#fff}
-    th,td{border:1px solid #d7dce2;padding:.45rem .7rem;text-align:right}
+    .card .value{font-size:1.5rem;font-weight:700;color:#f6efd9}
+    .card .label{font-size:.82rem;color:#9aa8c9;text-transform:uppercase}
+    table{border-collapse:collapse;width:100%;margin:.8rem 0;background:#241a4d}
+    th,td{border:1px solid #392e63;padding:.45rem .7rem;text-align:right;color:#e7e2f5}
     th:first-child,td:first-child{text-align:left}
-    th{background:#eef2f6}
+    th{background:#392e63;color:#f6efd9}
     .overlays{display:flex;flex-wrap:wrap;gap:1.2rem}
-    .overlays figure{margin:0;background:#fff;border:1px solid #d7dce2;
-        border-radius:8px;padding:.6rem;max-width:460px}
-    .overlays img{max-width:100%;height:auto;display:block}
-    figcaption{font-size:.85rem;color:#5a636e;padding-top:.4rem}
-    .note{background:#fff8e1;border:1px solid #f0d98c;border-radius:8px;
-          padding:.7rem 1rem;font-size:.9rem}
+    .overlays figure{margin:0;background:#241a4d;border:1px solid #392e63;
+        border-radius:10px;padding:.6rem;max-width:460px}
+    .overlays img{max-width:100%;height:auto;display:block;border-radius:6px}
+    figcaption{font-size:.85rem;color:#9aa8c9;padding-top:.4rem}
+    .note{background:#392e63;border:1px solid #8b7fd1;border-radius:10px;
+          padding:.7rem 1rem;font-size:.9rem;color:#e7e2f5}
     """
 
     html = f"""<!DOCTYPE html>
