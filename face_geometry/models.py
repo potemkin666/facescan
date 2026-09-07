@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+import numpy as np
+
 # ---------------------------------------------------------------------------
 # MediaPipe canonical face-mesh constants (468 landmark topology).
 # These are well-known index sets published with the Face Mesh model.
@@ -43,10 +45,10 @@ class FaceObservation:
 
     image_path: str
     image_size: tuple[int, int]  # (width, height)
-    landmarks: "object"  # np.ndarray shape (468, 2), pixel coordinates
+    landmarks: np.ndarray  # shape (468, 2), pixel coordinates
     pose: HeadPose | None
     detection_confidence: float
-    normalized: "object | None" = None  # np.ndarray (468, 2), pose-normalised
+    normalized: np.ndarray | None = None  # shape (468, 2), pose-normalised
     reference_distance: float = 1.0  # normaliser used to build `normalized`
     quality_flags: tuple[str, ...] = ()
 
@@ -138,4 +140,4 @@ class ConsensusComparison:
     landmark_rmse: float
     procrustes_distance: float
     regional: tuple[RegionalStats, ...] = ()
-    per_landmark_displacement: "object" = field(default=None, repr=False)
+    per_landmark_displacement: np.ndarray | None = field(default=None, repr=False)

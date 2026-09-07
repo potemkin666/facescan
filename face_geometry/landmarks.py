@@ -208,9 +208,10 @@ class FaceLandmarkExtractor:
         )
         pose = estimate_head_pose(coords, (width, height))
 
+        # The detector only returns faces above min_face_detection_confidence,
+        # so a returned face is at/above the configured threshold; record that
+        # threshold as the effective detection confidence.
         confidence = 1.0
-        categories = getattr(result, "face_blendshapes", None)
-        _ = categories  # blendshapes disabled; confidence tracked via threshold
         logger.debug(
             "%s: %d landmarks, pose yaw=%.1f pitch=%.1f roll=%.1f",
             image_path,
