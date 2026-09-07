@@ -17,9 +17,13 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
+app = ["pyinstaller>=6.0"]
 
 [project.scripts]
 face-geometry = "face_geometry.cli:main"
+
+[project.gui-scripts]
+face-geometry-gui = "face_geometry.gui:main"
 
 [tool.setuptools.packages.find]
 include = ["face_geometry*"]

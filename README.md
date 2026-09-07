@@ -27,6 +27,36 @@ or pass `--model-path`.
 
 ## Usage
 
+### Desktop app ("Moonlit Shore")
+
+A no-terminal desktop GUI is included, styled after a moonlit-shore night
+scene (deep indigo sky, warm moonglow, silvery moonlit-water accents):
+
+```bash
+face-geometry-gui            # after `pip install -e .`
+# or
+python -m face_geometry.gui
+```
+
+Pick the baseline/makeup/output folders, click **Run comparison**, then
+**Open report** once it finishes. The same theme is used for the generated
+`report.html`.
+
+To ship it as a double-clickable standalone app that launches straight after
+download (no Python install required by the end user), build it with
+PyInstaller:
+
+```bash
+pip install -e '.[app]'
+pyinstaller packaging/face-geometry-gui.spec
+```
+
+This produces `dist/Face Geometry.app` on macOS, `dist/Face Geometry/Face
+Geometry.exe` on Windows, or `dist/Face Geometry/Face Geometry` on Linux —
+double-click (or run) it directly, no `pip install` or terminal needed.
+
+### Command line
+
 ```bash
 python -m face_geometry --baseline ./baseline --makeup ./makeup --output ./results
 ```
@@ -143,6 +173,7 @@ face_geometry/
     __init__.py
     __main__.py
     cli.py            # command-line interface & pipeline orchestration
+    gui.py            # "Moonlit Shore" desktop GUI (tkinter, no CLI needed)
     detection.py      # image discovery, observation loading
     landmarks.py      # MediaPipe Face Landmarker extraction + head pose
     alignment.py      # pose normalisation & Procrustes alignment
@@ -154,6 +185,8 @@ face_geometry/
     visualisation.py  # change-map overlays
     reporting.py      # CSV / JSON / HTML writers
     models.py         # shared dataclasses
+packaging/
+    face-geometry-gui.spec  # PyInstaller spec for a standalone desktop app
 tests/
 README.md
 pyproject.toml
