@@ -29,9 +29,24 @@ import queue
 import threading
 import webbrowser
 from pathlib import Path
-from tkinter import BooleanVar, StringVar, Tk, filedialog, ttk
+from tkinter import BooleanVar, StringVar, Text, Tk, filedialog, ttk
 
 from .quality import DEFAULT_MAX_PITCH, DEFAULT_MAX_YAW
+
+# Shared with the CLI so the GUI's defaults never silently drift out of sync
+# (see ``face_geometry.cli.build_parser``).
+_CLI_DEFAULTS = None
+
+
+def _cli_default(name: str):
+    """Look up an argparse default from ``face_geometry.cli.build_parser``."""
+
+    global _CLI_DEFAULTS
+    if _CLI_DEFAULTS is None:
+        from .cli import build_parser
+
+        _CLI_DEFAULTS = build_parser()
+    return _CLI_DEFAULTS.get_default(name)
 
 # --- "Moonlit Shore" palette -------------------------------------------------
 NIGHT_SKY = "#181233"          # deep indigo background
@@ -45,7 +60,7 @@ ACCENT = "#8b7fd1"             # lavender accent (buttons, borders)
 ACCENT_ACTIVE = "#a89bef"      # hover/active accent
 ERROR = "#e08a8a"
 
-FONT_FAMILY = "Georgia" if "nt" in __import__("os").name else "Georgia"
+FONT_FAMILY = "Georgia"
 
 
 class _LogHandler(logging.Handler):
@@ -187,7 +202,6 @@ class FaceGeometryApp:
 
         log_frame = ttk.Frame(self.root, style="Panel.TFrame")
         log_frame.pack(fill="both", expand=True, padx=24, pady=(8, 20))
-        from tkinter import Text
 
         self.log_text = Text(
             log_frame, bg=NIGHT_SKY_ALT, fg=MOONLIGHT, insertbackground=MOONGLOW,
@@ -241,15 +255,15 @@ class FaceGeometryApp:
             makeup=Path(self.makeup_var.get()),
             output=Path(self.output_var.get()),
             recursive=self.recursive_var.get(),
-            min_detection_confidence=0.5,
+            min_detection_confidence=_cli_default("min_detection_confidence"),
             max_yaw=DEFAULT_MAX_YAW,
             max_pitch=DEFAULT_MAX_PITCH,
             save_overlays=self.save_overlays_var.get(),
             show_landmark_ids=False,
-            workers=1,
+            workers=_cli_default("workers"),
             model_path=None,
-            warn_threshold=0.02,
-            alert_threshold=0.05,
+            warn_threshold=_cli_default("warn_threshold"),
+            alert_threshold=_cli_default("alert_threshold"),
             verbose=False,
         )
 
