@@ -11,6 +11,7 @@ import argparse
 import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -80,14 +81,25 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _compare_pair(
+    pair: tuple[FaceObservation, FaceObservation], args: argparse.Namespace
+) -> PairwiseResult:
+    """Module-level worker (picklable) comparing one baseline/makeup pair."""
+
+    return _compare_one(pair[0], pair[1], args)
+
+
 def _compare_one(
     baseline: FaceObservation, makeup: FaceObservation, args: argparse.Namespace
 ) -> PairwiseResult:
     """Compare one baseline observation against one makeup observation."""
 
     assert baseline.normalized is not None and makeup.normalized is not None
+    # Shapes are already similarity-normalised to a unit reference distance,
+    # so only a rigid (rotation+translation) refinement is applied; re-scaling
+    # here would artificially shrink the measured displacement.
     aligned, _, _, _, _ = procrustes_align(
-        baseline.normalized, makeup.normalized, allow_scaling=True
+        baseline.normalized, makeup.normalized, allow_scaling=False
     )
     metrics = compare_shapes(baseline.normalized, aligned)
     quality = assess_pair(
@@ -135,8 +147,9 @@ def run(args: argparse.Namespace) -> dict:
     pairs = [(b, m) for b in baseline_obs for m in makeup_obs]
     logger.info("Running %d pairwise comparisons", len(pairs))
     if args.workers > 1:
+        worker = partial(_compare_pair, args=args)
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            pairwise = list(pool.map(lambda p: _compare_one(*p, args), pairs))
+            pairwise = list(pool.map(worker, pairs))
     else:
         pairwise = [_compare_one(b, m, args) for b, m in pairs]
 

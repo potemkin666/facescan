@@ -72,7 +72,10 @@ def compare_consensus(
 
     base = consensus_shape(baseline_shapes)
     make = consensus_shape(makeup_shapes)
-    aligned, residual, _, _, _ = procrustes_align(base, make, allow_scaling=True)
+    # Both consensus shapes are already similarity-normalised to a unit
+    # reference distance; use rigid (rotation+translation) alignment only so
+    # re-scaling cannot mask a genuine size/shape change.
+    aligned, residual, _, _, _ = procrustes_align(base, make, allow_scaling=False)
     disp = np.linalg.norm(aligned - base, axis=1)
     stats = displacement_stats(disp)
     return ConsensusComparison(

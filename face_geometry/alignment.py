@@ -96,7 +96,12 @@ def procrustes_align(
     """Optimally similarity-align ``moving`` onto ``reference``.
 
     Solves the orthogonal Procrustes problem (translation + rotation +
-    optional uniform scaling) with the classical Kabsch/SVD solution.
+    optional uniform scaling) with the classical SVD solution. The rotation
+    comes from the Kabsch algorithm; with uniform scaling this is the
+    Umeyama similarity transform (S. Umeyama, *Least-Squares Estimation of
+    Transformation Parameters Between Two Point Patterns*, TPAMI 1991).
+    Shapes are centred and unit-norm scaled before solving, then mapped back
+    onto the reference scale/origin.
 
     Args:
         reference: target shape, (N, 2).

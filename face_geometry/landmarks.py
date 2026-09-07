@@ -150,6 +150,7 @@ class FaceLandmarkExtractor:
             RunningMode,
         )
 
+        self.min_detection_confidence = float(min_detection_confidence)
         resolved = ensure_model(model_path)
         options = FaceLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=str(resolved)),
@@ -211,7 +212,7 @@ class FaceLandmarkExtractor:
         # The detector only returns faces above min_face_detection_confidence,
         # so a returned face is at/above the configured threshold; record that
         # threshold as the effective detection confidence.
-        confidence = 1.0
+        confidence = self.min_detection_confidence
         logger.debug(
             "%s: %d landmarks, pose yaw=%.1f pitch=%.1f roll=%.1f",
             image_path,

@@ -285,11 +285,11 @@ def write_report_html(
     weakest = summary["weakest_region"]
 
     region_rows = "\n".join(
-        "<tr><td>{region}</td><td>{mean}</td><td>{rmse}</td><td>{rel:.2f}x</td></tr>".format(
+        "<tr><td>{region}</td><td>{mean}</td><td>{rmse}</td><td>{rel}x</td></tr>".format(
             region=escape(str(r["region"])),
-            mean=_fmt(r["mean"]),
-            rmse=_fmt(r["rmse"]),
-            rel=r["relative_change"],
+            mean=escape(_fmt(r["mean"])),
+            rmse=escape(_fmt(r["rmse"])),
+            rel=escape(f"{float(r['relative_change']):.2f}"),
         )
         for r in summary["region_groups"]
     )

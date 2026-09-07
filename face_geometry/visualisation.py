@@ -84,7 +84,10 @@ def draw_change_map(
     make = np.asarray(makeup, dtype=np.float64)[:, :2]
     aligned, _, _, _, _ = procrustes_align(base, make, allow_scaling=False)
     disp = np.linalg.norm(aligned - base, axis=1)
-    vmax = magnitude_vmax if magnitude_vmax is not None else float(disp.max() or 1.0)
+    if magnitude_vmax is not None:
+        vmax = float(magnitude_vmax)
+    else:
+        vmax = max(float(disp.max()), 1e-9)  # avoid div-by-zero for identical shapes
 
     canvas, offset, scale = _canvas_and_transform([base, aligned], size, margin)
     for i, (b_pt, m_pt) in enumerate(zip(base, aligned)):

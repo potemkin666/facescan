@@ -90,7 +90,8 @@ def assess_pair(
 
     base_eyes = eye_openness(baseline.normalized)
     make_eyes = eye_openness(makeup.normalized)
-    min_open = min(base_eyes + make_eyes)
+    # Minimum openness across both eyes of both images in the pair.
+    min_openness_across_pair = min(base_eyes + make_eyes)
     pairs = zip(base_eyes, make_eyes)
     blink = any(
         (max(a, b) > 1e-6 and min(a, b) / max(a, b) < BLINK_RATIO_THRESHOLD)
@@ -106,5 +107,5 @@ def assess_pair(
         score=score,
         flags=tuple(flags),
         mouth_opening_delta=float(delta),
-        min_eye_openness=float(min_open),
+        min_eye_openness=float(min_openness_across_pair),
     )
