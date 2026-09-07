@@ -75,17 +75,12 @@ def test_run_pipeline_success_updates_state_and_logs_score(app, monkeypatch) -> 
 
     args = argparse.Namespace(output=Path("/tmp/does-not-matter"), verbose=False)
     app._run_pipeline(args)
-    app.root.update()
+    app._drain_log_queue()
 
     assert app._result_output == args.output
     assert "Done" in app.status_var.get()
-    messages = []
-    try:
-        while True:
-            messages.append(app._log_queue.get_nowait())
-    except queue.Empty:
-        pass
-    assert any("Geometry change score: 42.0" in m for m in messages)
+    log_contents = app.log_text.get("1.0", "end")
+    assert "Geometry change score: 42.0" in log_contents
 
 
 def test_run_pipeline_failure_logs_traceback(app, monkeypatch) -> None:
@@ -98,13 +93,8 @@ def test_run_pipeline_failure_logs_traceback(app, monkeypatch) -> None:
 
     args = argparse.Namespace(output=Path("/tmp/does-not-matter"), verbose=False)
     app._run_pipeline(args)
-    app.root.update()
+    app._drain_log_queue()
 
     assert "Failed" in app.status_var.get()
-    messages = []
-    try:
-        while True:
-            messages.append(app._log_queue.get_nowait())
-    except queue.Empty:
-        pass
-    assert any("RuntimeError: kaboom" in m for m in messages)
+    log_contents = app.log_text.get("1.0", "end")
+    assert "RuntimeError: kaboom" in log_contents

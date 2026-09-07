@@ -84,6 +84,7 @@ class FaceGeometryApp:
         self.root.minsize(680, 560)
 
         self._log_queue: "queue.Queue[str]" = queue.Queue()
+        self._result_queue: "queue.Queue[tuple[Path | None, str | None]]" = queue.Queue()
         self._worker: threading.Thread | None = None
         self._result_output: Path | None = None
 
@@ -247,11 +248,15 @@ class FaceGeometryApp:
             return
         baseline_path = Path(self.baseline_var.get())
         makeup_path = Path(self.makeup_var.get())
+        output_path = Path(self.output_var.get())
         if not baseline_path.is_dir():
             self.status_var.set(f"Baseline folder does not exist: {baseline_path}")
             return
         if not makeup_path.is_dir():
             self.status_var.set(f"Makeup folder does not exist: {makeup_path}")
+            return
+        if output_path.exists() and not output_path.is_dir():
+            self.status_var.set(f"Output path is not a folder: {output_path}")
             return
 
         self._append_log("Starting comparison\u2026")
@@ -263,7 +268,7 @@ class FaceGeometryApp:
         args = argparse.Namespace(
             baseline=baseline_path,
             makeup=makeup_path,
-            output=Path(self.output_var.get()),
+            output=output_path,
             recursive=self.recursive_var.get(),
             min_detection_confidence=_cli_default("min_detection_confidence"),
             max_yaw=_cli_default("max_yaw"),
@@ -295,12 +300,15 @@ class FaceGeometryApp:
         except Exception as exc:  # noqa: BLE001 - surfaced to the log pane
             for line in traceback.format_exc().splitlines():
                 self._log_queue.put(line)
-            self.root.after(0, self._on_finished, None, str(exc))
+            # Tkinter widgets must only be touched from the main thread; hand
+            # the result to the main-thread poll loop (``_drain_log_queue``)
+            # instead of scheduling directly from this worker thread.
+            self._result_queue.put((None, str(exc)))
         else:
-            self.root.after(0, self._on_finished, args.output, None)
             score = summary.get("geometry_change_score")
             if score is not None:
                 self._log_queue.put(f"Geometry change score: {score:.1f} / 100")
+            self._result_queue.put((args.output, None))
         finally:
             logger.removeHandler(handler)
 
@@ -334,6 +342,12 @@ class FaceGeometryApp:
             while True:
                 message = self._log_queue.get_nowait()
                 self._append_log(message)
+        except queue.Empty:
+            pass
+        try:
+            while True:
+                output, error = self._result_queue.get_nowait()
+                self._on_finished(output, error)
         except queue.Empty:
             pass
         self.root.after(150, self._drain_log_queue)
