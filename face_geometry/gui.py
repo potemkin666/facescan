@@ -31,8 +31,6 @@ import webbrowser
 from pathlib import Path
 from tkinter import BooleanVar, StringVar, Text, Tk, filedialog, ttk
 
-from .quality import DEFAULT_MAX_PITCH, DEFAULT_MAX_YAW
-
 # Shared with the CLI so the GUI's defaults never silently drift out of sync
 # (see ``face_geometry.cli.build_parser``).
 _CLI_DEFAULTS = None
@@ -256,15 +254,15 @@ class FaceGeometryApp:
             output=Path(self.output_var.get()),
             recursive=self.recursive_var.get(),
             min_detection_confidence=_cli_default("min_detection_confidence"),
-            max_yaw=DEFAULT_MAX_YAW,
-            max_pitch=DEFAULT_MAX_PITCH,
+            max_yaw=_cli_default("max_yaw"),
+            max_pitch=_cli_default("max_pitch"),
             save_overlays=self.save_overlays_var.get(),
-            show_landmark_ids=False,
+            show_landmark_ids=_cli_default("show_landmark_ids"),
             workers=_cli_default("workers"),
-            model_path=None,
+            model_path=_cli_default("model_path"),
             warn_threshold=_cli_default("warn_threshold"),
             alert_threshold=_cli_default("alert_threshold"),
-            verbose=False,
+            verbose=_cli_default("verbose"),
         )
 
         self._worker = threading.Thread(target=self._run_pipeline, args=(args,), daemon=True)

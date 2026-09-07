@@ -34,5 +34,15 @@ def test_cli_default_matches_argparse_defaults() -> None:
     from face_geometry.cli import build_parser
 
     parser = build_parser()
-    for name in ("min_detection_confidence", "workers", "warn_threshold", "alert_threshold"):
+    for name in (
+        "min_detection_confidence",
+        "workers",
+        "warn_threshold",
+        "alert_threshold",
+        "max_yaw",
+        "max_pitch",
+        "show_landmark_ids",
+        "model_path",
+        "verbose",
+    ):
         assert _cli_default(name) == parser.get_default(name)
