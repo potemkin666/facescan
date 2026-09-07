@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import queue
+from pathlib import Path
 
 import pytest
 
@@ -46,3 +47,64 @@ def test_cli_default_matches_argparse_defaults() -> None:
         "verbose",
     ):
         assert _cli_default(name) == parser.get_default(name)
+
+
+@pytest.fixture()
+def app():
+    from tkinter import TclError, Tk
+
+    from face_geometry.gui import FaceGeometryApp
+
+    try:
+        root = Tk()
+    except TclError as exc:  # pragma: no cover - no display available
+        pytest.skip(f"no display available for tkinter: {exc}")
+    try:
+        yield FaceGeometryApp(root)
+    finally:
+        root.destroy()
+
+
+def test_run_pipeline_success_updates_state_and_logs_score(app, monkeypatch) -> None:
+    import argparse
+
+    # ``run`` is imported lazily inside ``_run_pipeline`` from ``face_geometry.cli``.
+    monkeypatch.setattr(
+        "face_geometry.cli.run", lambda args: {"geometry_change_score": 42.0}
+    )
+
+    args = argparse.Namespace(output=Path("/tmp/does-not-matter"), verbose=False)
+    app._run_pipeline(args)
+    app.root.update()
+
+    assert app._result_output == args.output
+    assert "Done" in app.status_var.get()
+    messages = []
+    try:
+        while True:
+            messages.append(app._log_queue.get_nowait())
+    except queue.Empty:
+        pass
+    assert any("Geometry change score: 42.0" in m for m in messages)
+
+
+def test_run_pipeline_failure_logs_traceback(app, monkeypatch) -> None:
+    import argparse
+
+    def _boom(_args):
+        raise RuntimeError("kaboom")
+
+    monkeypatch.setattr("face_geometry.cli.run", _boom)
+
+    args = argparse.Namespace(output=Path("/tmp/does-not-matter"), verbose=False)
+    app._run_pipeline(args)
+    app.root.update()
+
+    assert "Failed" in app.status_var.get()
+    messages = []
+    try:
+        while True:
+            messages.append(app._log_queue.get_nowait())
+    except queue.Empty:
+        pass
+    assert any("RuntimeError: kaboom" in m for m in messages)

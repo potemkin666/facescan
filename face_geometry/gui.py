@@ -27,6 +27,7 @@ import argparse
 import logging
 import queue
 import threading
+import traceback
 import webbrowser
 from pathlib import Path
 from tkinter import BooleanVar, StringVar, Text, Tk, filedialog, ttk
@@ -244,6 +245,14 @@ class FaceGeometryApp:
         if not self.baseline_var.get() or not self.makeup_var.get() or not self.output_var.get():
             self.status_var.set("Please choose baseline, makeup and output folders.")
             return
+        baseline_path = Path(self.baseline_var.get())
+        makeup_path = Path(self.makeup_var.get())
+        if not baseline_path.is_dir():
+            self.status_var.set(f"Baseline folder does not exist: {baseline_path}")
+            return
+        if not makeup_path.is_dir():
+            self.status_var.set(f"Makeup folder does not exist: {makeup_path}")
+            return
 
         self._append_log("Starting comparison\u2026")
         self.status_var.set("Running\u2026")
@@ -252,8 +261,8 @@ class FaceGeometryApp:
         self.progress.start(12)
 
         args = argparse.Namespace(
-            baseline=Path(self.baseline_var.get()),
-            makeup=Path(self.makeup_var.get()),
+            baseline=baseline_path,
+            makeup=makeup_path,
             output=Path(self.output_var.get()),
             recursive=self.recursive_var.get(),
             min_detection_confidence=_cli_default("min_detection_confidence"),
@@ -284,7 +293,8 @@ class FaceGeometryApp:
         try:
             summary = run(args)
         except Exception as exc:  # noqa: BLE001 - surfaced to the log pane
-            self._log_queue.put(f"ERROR: {exc}")
+            for line in traceback.format_exc().splitlines():
+                self._log_queue.put(line)
             self.root.after(0, self._on_finished, None, str(exc))
         else:
             self.root.after(0, self._on_finished, args.output, None)
