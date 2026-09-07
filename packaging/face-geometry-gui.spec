@@ -13,6 +13,13 @@
 
 # -*- mode: python ; coding: utf-8 -*-
 
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    _APP_VERSION = version("face-geometry")
+except PackageNotFoundError:
+    _APP_VERSION = "0.0.0"
+
 a = Analysis(
     ["../face_geometry/gui.py"],
     pathex=["../"],
@@ -50,7 +57,7 @@ app = BUNDLE(
     info_plist={
         "CFBundleName": "Face Geometry",
         "CFBundleDisplayName": "Face Geometry",
-        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleShortVersionString": _APP_VERSION,
         "NSHighResolutionCapable": True,
     },
 )

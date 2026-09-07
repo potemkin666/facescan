@@ -33,18 +33,18 @@ from tkinter import BooleanVar, StringVar, Text, Tk, filedialog, ttk
 
 # Shared with the CLI so the GUI's defaults never silently drift out of sync
 # (see ``face_geometry.cli.build_parser``).
-_CLI_DEFAULTS = None
+_CLI_PARSER = None
 
 
 def _cli_default(name: str):
     """Look up an argparse default from ``face_geometry.cli.build_parser``."""
 
-    global _CLI_DEFAULTS
-    if _CLI_DEFAULTS is None:
+    global _CLI_PARSER
+    if _CLI_PARSER is None:
         from .cli import build_parser
 
-        _CLI_DEFAULTS = build_parser()
-    return _CLI_DEFAULTS.get_default(name)
+        _CLI_PARSER = build_parser()
+    return _CLI_PARSER.get_default(name)
 
 # --- "Moonlit Shore" palette -------------------------------------------------
 NIGHT_SKY = "#181233"          # deep indigo background
@@ -89,7 +89,10 @@ class FaceGeometryApp:
         self.baseline_var = StringVar()
         self.makeup_var = StringVar()
         self.output_var = StringVar()
-        self.recursive_var = BooleanVar(value=False)
+        self.recursive_var = BooleanVar(value=_cli_default("recursive"))
+        # The GUI intentionally defaults change-map overlays to on (the CLI
+        # defaults --save-overlays to off) since they are the main visual
+        # payoff for a point-and-click user; everything else mirrors the CLI.
         self.save_overlays_var = BooleanVar(value=True)
         self.status_var = StringVar(value="Ready.")
 
