@@ -187,8 +187,9 @@ def run(args: argparse.Namespace) -> dict:
     write_summary_json(summary, args.output / "summary.json")
 
     overlays: list[tuple[str, np.ndarray]] = []
-    base_consensus = np.mean(np.stack(base_shapes), axis=0)
-    make_consensus = np.mean(np.stack(make_shapes), axis=0)
+    # Depict the exact consensus shapes the score/headline numbers derive from.
+    base_consensus = consensus.baseline_consensus_shape
+    make_consensus = consensus.makeup_consensus_shape
     change_map = draw_change_map(
         base_consensus, make_consensus, show_landmark_ids=args.show_landmark_ids
     )

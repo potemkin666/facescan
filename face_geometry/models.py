@@ -141,3 +141,7 @@ class ConsensusComparison:
     procrustes_distance: float
     regional: tuple[RegionalStats, ...] = ()
     per_landmark_displacement: np.ndarray | None = field(default=None, repr=False)
+    baseline_consensus_shape: np.ndarray | None = field(default=None, repr=False)
+    makeup_consensus_shape: np.ndarray | None = field(default=None, repr=False)
+    # Makeup consensus aligned onto the baseline consensus (for overlays).
+    aligned_makeup_consensus: np.ndarray | None = field(default=None, repr=False)

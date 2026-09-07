@@ -86,6 +86,9 @@ def compare_consensus(
         procrustes_distance=residual,
         regional=regional_displacements(disp),
         per_landmark_displacement=disp,
+        baseline_consensus_shape=base,
+        makeup_consensus_shape=make,
+        aligned_makeup_consensus=aligned,
     )
 
 

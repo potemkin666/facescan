@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .alignment import _check_shapes, procrustes_distance
+from .alignment import _check_shapes, procrustes_align
 from .models import DisplacementStats, RegionalStats
 from .regions import REGIONS
 
@@ -79,10 +79,10 @@ def regional_displacements(
 def compare_shapes(a: np.ndarray, b: np.ndarray) -> dict[str, float]:
     """Compute the full scalar comparison between two normalised shapes.
 
-    The shapes are assumed already similarity-normalised; an additional
-    (rotation-only refinement is unnecessary) Procrustes distance is computed
-    with scaling allowed, giving the residual shape difference after optimal
-    translation/rotation/scale.
+    The shapes are assumed already similarity-normalised to a unit reference
+    distance, so the Procrustes residual is computed with *rigid* alignment
+    (rotation + translation only, ``allow_scaling=False``); re-scaling would
+    artificially shrink the measured difference between normalised shapes.
 
     Returns:
         Dictionary with mean/median/max/RMSE displacement and Procrustes
@@ -91,10 +91,11 @@ def compare_shapes(a: np.ndarray, b: np.ndarray) -> dict[str, float]:
 
     disp = euclidean_displacements(a, b)
     stats = displacement_stats(disp)
+    _, residual, _, _, _ = procrustes_align(a, b, allow_scaling=False)
     return {
         "mean_landmark_displacement": stats.mean,
         "median_landmark_displacement": stats.median,
         "max_landmark_displacement": stats.max,
         "landmark_rmse": stats.rmse,
-        "procrustes_distance": procrustes_distance(a, b),
+        "procrustes_distance": residual,
     }

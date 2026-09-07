@@ -103,6 +103,12 @@ def procrustes_align(
     Shapes are centred and unit-norm scaled before solving, then mapped back
     onto the reference scale/origin.
 
+    With ``allow_scaling=True`` this solves the full similarity Procrustes
+    problem; with ``allow_scaling=False`` it solves the *rigid* Procrustes
+    problem (rotation + translation only) and the returned ``scale`` is 1.0.
+    Callers comparing already similarity-normalised shapes should use the
+    rigid mode so re-scaling cannot mask a genuine size/shape difference.
+
     Args:
         reference: target shape, (N, 2).
         moving: shape to align, (N, 2).

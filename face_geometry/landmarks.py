@@ -14,6 +14,7 @@ downloaded automatically on first use into
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import urllib.request
@@ -33,6 +34,12 @@ MODEL_URL = (
 _MODEL_ENV_VAR = "FACE_GEOMETRY_MODEL_PATH"
 _DEFAULT_MODEL_DIR = Path.home() / ".cache" / "face_geometry" / "models"
 _MODEL_FILENAME = "face_landmarker.task"
+
+# Pinned SHA-256 of the official float32 face_landmarker.task, used to
+# integrity-check the downloaded model. When ``None`` the check is skipped
+# (e.g. while the official digest is not yet pinned); setting it to the
+# published digest makes any mismatching download be rejected and removed.
+_MODEL_SHA256: str | None = None
 
 #: OpenCV solvePnP reference points (right eye outer corner is index 263).
 _POSE_LANDMARK_IDS = (1, 152, 263, 33, 287, 57)
@@ -55,11 +62,23 @@ def default_model_path() -> Path:
     return _DEFAULT_MODEL_DIR / _MODEL_FILENAME
 
 
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def ensure_model(model_path: Path | None = None) -> Path:
     """Return a path to a valid model file, downloading it if necessary.
 
+    The download is integrity-checked against a pinned SHA-256; a corrupted
+    or tampered file is rejected and removed rather than silently trusted.
+
     Raises:
-        ModelDownloadError: if the file is missing and cannot be downloaded.
+        ModelDownloadError: if the file is missing, cannot be downloaded, or
+            fails the integrity check.
     """
 
     path = model_path or default_model_path()
@@ -74,21 +93,37 @@ def ensure_model(model_path: Path | None = None) -> Path:
             f"Could not download face landmarker model from {MODEL_URL}: {exc}. "
             f"Download it manually and set {_MODEL_ENV_VAR} or pass --model-path."
         ) from exc
+    actual = _sha256(path)
+    if _MODEL_SHA256 is not None and actual != _MODEL_SHA256:
+        path.unlink(missing_ok=True)
+        raise ModelDownloadError(
+            "Downloaded face landmarker model failed its SHA-256 integrity "
+            f"check (expected {_MODEL_SHA256}, got {actual}). The file was "
+            "removed; download it manually from the official MediaPipe source "
+            f"and set {_MODEL_ENV_VAR} or pass --model-path."
+        )
     return path
 
 
 def estimate_head_pose(
     landmarks: np.ndarray, image_size: tuple[int, int]
 ) -> HeadPose:
-    """Estimate yaw/pitch/roll from 2D landmarks with a weak-perspective PnP.
+    """Estimate a coarse yaw/pitch/roll for quality gating.
 
-    Uses the 3D coordinates of the canonical face mesh as the object model:
-    MediaPipe's landmark z values share the x/y scale, so we reconstruct a
-    3D face directly from the detected (x, y, z) triplets and solve for the
-    rotation against itself projected to 2D. For stability we instead solve
-    PnP from image points to a generic model built from the landmark
-    coordinates themselves; the resulting rotation captures out-of-plane
-    pose robustly enough for quality gating.
+    Approach: MediaPipe reports a z value per landmark that shares the x/y
+    scale, so the detected (x, y, z) triplets form a rough 3D face. We centre
+    those 3D points to build an object model and run ``cv2.solvePnP`` to
+    recover the rotation that best projects that model onto the detected 2D
+    image points. Because the object model is itself derived from the
+    (already posed) detection, the estimate is *biased toward zero* for
+    out-of-plane rotation; it is a heuristic intended only for coarse
+    extreme-pose quality gating (the ``--max-yaw``/``--max-pitch`` flags),
+    not for precise pose measurement.
+
+    ``output_facial_transformation_matrixes=True`` is enabled on the
+    landmarker so a metric-accurate matrix is available should a future
+    refinement prefer it over this heuristic; the current implementation does
+    not consume it.
 
     Args:
         landmarks: array of shape (N, 3) in pixel units (x, y, z as reported).

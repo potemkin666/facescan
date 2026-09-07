@@ -130,7 +130,8 @@ def draw_threshold_map(
     with displacement vectors to scale.
 
     Returns:
-        BGR image array plus the count of flagged landmarks in the title.
+        BGR image array. The count of flagged landmarks is written into the
+        image's title text.
     """
 
     base = np.asarray(baseline, dtype=np.float64)[:, :2]

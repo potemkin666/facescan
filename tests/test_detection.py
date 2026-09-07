@@ -40,8 +40,17 @@ class TestFindImages:
         with pytest.raises(NotADirectoryError):
             find_images(tmp_path / "nope")
 
-    def test_supported_extensions_constant(self) -> None:
-        assert SUPPORTED_EXTENSIONS == {".jpg", ".jpeg", ".png", ".webp"}
+    def test_supported_extensions_are_lowercase_and_complete(self) -> None:
+        # Behavioural: every canonical lowercase extension must be present.
+        for ext in (".jpg", ".jpeg", ".png", ".webp"):
+            assert ext in SUPPORTED_EXTENSIONS
+        assert isinstance(SUPPORTED_EXTENSIONS, frozenset)
+
+    def test_case_insensitive_discovery(self, tmp_path: Path) -> None:
+        _write_image(tmp_path / "upper.JPG")
+        _write_image(tmp_path / "mixed.PnG")
+        found = {p.name for p in find_images(tmp_path)}
+        assert found == {"upper.JPG", "mixed.PnG"}
 
 
 class TestLoadImage:
