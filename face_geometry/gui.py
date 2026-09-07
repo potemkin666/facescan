@@ -280,7 +280,7 @@ class FaceGeometryApp:
         handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
         logger = logging.getLogger("face_geometry")
         logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG if args.verbose else logging.INFO)
         try:
             summary = run(args)
         except Exception as exc:  # noqa: BLE001 - surfaced to the log pane
